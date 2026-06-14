@@ -1,0 +1,52 @@
+/* === RESET === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === VARIABLES === */
+:root {
+  --bg: #f5f5f5;
+  --white: #ffffff;
+  --primary: #6c5ce7;      /* purple — main color */
+  --success: #00b894;      /* green — know it */
+  --warning: #e17055;      /* orange — review */
+  --text: #2d3436;
+  --muted: #636e72;
+  --border: #dfe6e9;
+  --radius: 12px;
+}
+
+/* === BODY + HEADER === */
+/* center content, set font, background */
+
+/* === ADD SECTION === */
+/* flex row: input input button */
+/* on mobile: flex column */
+
+/* === FILTER BUTTONS === */
+/* flex row, gap, active state different color */
+
+/* === STATS BAR === */
+/* flex row, spaced, small muted text */
+
+/* === CARDS GRID === */
+/* CSS grid: repeat(auto-fill, minmax(250px, 1fr)) */
+/* gap between cards */
+
+/* === CARD === */
+/* white bg, border-radius, padding */
+/* cursor pointer */
+/* transition for flip */
+
+/* === CARD FLIP (the magic part) === */
+.card-inner { transition: transform 0.5s; transform-style: preserve-3d; }
+.card.flipped .card-inner { transform: rotateY(180deg); }
+.card-front, .card-back { backface-visibility: hidden; }
+.card-back { transform: rotateY(180deg); }
+
+/* === BUTTONS === */
+/* know-btn: green, review-btn: orange, delete-btn: muted small */
+
+/* === RESPONSIVE === */
+@media (max-width: 600px) {
+  /* stack form inputs vertically */
+  /* single column card grid */
+}
