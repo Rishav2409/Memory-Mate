@@ -1,9 +1,4 @@
-const card = {
-    id: Date.now(),
-    question: "What is closure?",
-    answer: "Function remembering outer scope",
-    status: "new"
-}
+
 
 let cards = []
 
@@ -16,8 +11,7 @@ function saveCards() {
     localStorage.setItem('memorymate-cards', JSON.stringify(cards))
 }
 
-loadCards()
-console.log(cards)
+
 
 
 function addCard() {
@@ -28,6 +22,9 @@ function addCard() {
     const newcard = { id: Date.now(), question, answer, status: "new" }
     cards.push(newcard)
     saveCards()
+
+    document.getElementById("question-input").value = ""
+    document.getElementById("answer-input").value = ""
     renderCards()
 }
 
@@ -35,9 +32,15 @@ function renderCards() {
     const container = document.getElementById("cards-container")
     container.innerHTML = ""
     const filtered = getFilteredCards()
+
+    if(filtered.length === 0){
+        container.innerHTML = '<p class="empty-msg">No cards yet. Add one Above!</p>'
+        updateStats()
+        return
+    }
     filtered.forEach(card => {
-        const cardE1 = createCardElement(card)
-        container.appendChild(cardE1)
+        const cardEl = createCardElement(card)
+        container.appendChild(cardEl)
     })
     updateStats()
 }
@@ -120,6 +123,9 @@ document.getElementById('add-btn').addEventListener('click', addCard)
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         currentFilter = btn.dataset.filter
+
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
         renderCards()
     })
 })
