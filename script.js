@@ -1,6 +1,9 @@
 
 
 let cards = []
+let currentFilter = 'all'
+
+// ---------- storage ----------
 
 function loadCards() {
     const saved = localStorage.getItem('memorymate-cards')
@@ -11,42 +14,53 @@ function saveCards() {
     localStorage.setItem('memorymate-cards', JSON.stringify(cards))
 }
 
-
-
+// ---------- add ----------
 
 function addCard() {
-    const question = document.getElementById("question-input").value.trim()
-    const answer = document.getElementById("answer-input").value.trim()
-    if (!question || !answer) return
+    const qInput = document.getElementById('question-input')
+    const aInput = document.getElementById('answer-input')
+    const question = qInput.value.trim()
+    const answer = aInput.value.trim()
 
-    const newcard = { id: Date.now(), question, answer, status: "new" }
-    cards.push(newcard)
+    if (!question || !answer) {
+        const target = !question ? qInput : aInput
+        target.classList.add('input-error')
+        target.focus()
+        setTimeout(() => target.classList.remove('input-error'), 600)
+        return
+    }
+
+    const newCard = { id: Date.now(), question, answer, status: 'new' }
+    cards.unshift(newCard)
     saveCards()
 
-    document.getElementById("question-input").value = ""
-    document.getElementById("answer-input").value = ""
+    qInput.value = ''
+    aInput.value = ''
+    qInput.focus()
     renderCards()
 }
 
+// ---------- render ----------
+
 function renderCards() {
-    const container = document.getElementById("cards-container")
-    container.innerHTML = ""
+    const container = document.getElementById('cards-container')
+    container.innerHTML = ''
     const filtered = getFilteredCards()
 
-    if(filtered.length === 0){
-        container.innerHTML = '<p class="empty-msg">No cards yet. Add one Above!</p>'
+    if (filtered.length === 0) {
+        const msg = document.createElement('p')
+        msg.className = 'empty-msg'
+        msg.textContent = cards.length === 0
+            ? 'No cards yet. Add one above to start studying!'
+            : `No ${currentFilter} cards right now.`
+        container.appendChild(msg)
         updateStats()
         return
     }
-    filtered.forEach(card => {
-        const cardEl = createCardElement(card)
-        container.appendChild(cardEl)
-    })
+
+    filtered.forEach(card => container.appendChild(createCardElement(card)))
     updateStats()
 }
-
-
-
 
 function createCardElement(card) {
     const div = document.createElement('div')
@@ -55,37 +69,60 @@ function createCardElement(card) {
     if (card.status === 'known') div.classList.add('known')
     if (card.status === 'review') div.classList.add('review')
 
-    div.innerHTML = `
-    <div class="card-inner">
-      <div class="card-front">
-        <p>${card.question}</p>
-      </div>
-      <div class="card-back">
-        <p>${card.answer}</p>
-        <button class="know-btn">Know it</button>
-        <button class="review-btn">Review again</button>
-      </div>
-    </div>
-    <button class="delete-btn">Delete</button>
-  `
-    // attach events
-    div.querySelector('.card-inner').addEventListener('click', () => {
-        div.classList.toggle('flipped')
-    })
-    div.querySelector('.know-btn').addEventListener('click', (e) => {
-        e.stopPropagation()  // prevent flip on button click
+    const inner = document.createElement('div')
+    inner.className = 'card-inner'
+
+    const front = document.createElement('div')
+    front.className = 'card-front'
+    const frontText = document.createElement('p')
+    frontText.textContent = card.question
+    front.appendChild(frontText)
+
+    const back = document.createElement('div')
+    back.className = 'card-back'
+    const backText = document.createElement('p')
+    backText.textContent = card.answer
+    back.appendChild(backText)
+
+    const knowBtn = document.createElement('button')
+    knowBtn.className = 'know-btn'
+    knowBtn.textContent = 'Know it'
+    knowBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
         updateStatus(card.id, 'known')
     })
-    div.querySelector('.review-btn').addEventListener('click', (e) => {
+
+    const reviewBtn = document.createElement('button')
+    reviewBtn.className = 'review-btn'
+    reviewBtn.textContent = 'Review again'
+    reviewBtn.addEventListener('click', (e) => {
         e.stopPropagation()
         updateStatus(card.id, 'review')
     })
-    div.querySelector('.delete-btn').addEventListener('click', () => {
+
+    back.appendChild(knowBtn)
+    back.appendChild(reviewBtn)
+
+    inner.appendChild(front)
+    inner.appendChild(back)
+
+    const deleteBtn = document.createElement('button')
+    deleteBtn.className = 'delete-btn'
+    deleteBtn.textContent = '✕'
+    deleteBtn.setAttribute('aria-label', 'Delete card')
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
         deleteCard(card.id)
     })
+
+    inner.addEventListener('click', () => div.classList.toggle('flipped'))
+
+    div.appendChild(inner)
+    div.appendChild(deleteBtn)
     return div
 }
 
+// ---------- status / delete ----------
 
 function updateStatus(id, status) {
     cards = cards.map(c => c.id === id ? { ...c, status } : c)
@@ -93,21 +130,21 @@ function updateStatus(id, status) {
     renderCards()
 }
 
-// 5. DELETE CARD
 function deleteCard(id) {
     cards = cards.filter(c => c.id !== id)
     saveCards()
     renderCards()
 }
 
-// 6. FILTER
-let currentFilter = 'all'
+// ---------- filter ----------
+
 function getFilteredCards() {
     if (currentFilter === 'all') return cards
     return cards.filter(c => c.status === currentFilter)
 }
 
-// 7. UPDATE STATS
+// ---------- stats ----------
+
 function updateStats() {
     document.getElementById('total-count').textContent = `Total: ${cards.length}`
     document.getElementById('known-count').textContent =
@@ -116,14 +153,23 @@ function updateStats() {
         `Review: ${cards.filter(c => c.status === 'review').length}`
 }
 
-// 8. INIT — runs when page loads
+// ---------- init ----------
+
 loadCards()
 renderCards()
+
 document.getElementById('add-btn').addEventListener('click', addCard)
+
+document.getElementById('answer-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addCard()
+})
+document.getElementById('question-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('answer-input').focus()
+})
+
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         currentFilter = btn.dataset.filter
-
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
         btn.classList.add('active')
         renderCards()
